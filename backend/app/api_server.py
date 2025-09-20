@@ -4,6 +4,9 @@ from livekit import api
 import os
 import uuid
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv(".env.local")
 
 app = FastAPI(title="DeskHelp Support API")
 

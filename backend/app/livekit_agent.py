@@ -123,6 +123,7 @@ def prewarm(proc: JobProcess):
 
 
 async def entrypoint(ctx: JobContext):
+    print("Entrypoint called")
     # Logging setup
     # Add any other context you want in all log entries here
     ctx.log_context_fields = {
