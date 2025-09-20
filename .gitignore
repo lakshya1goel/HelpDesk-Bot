@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual env
+.venv/
+env/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment files
+.env
+*.env
+
+# Logs
+*.log
+
+# Byte-compiled / optimized
+*.egg-info/
+.eggs/
+
+# Pytest cache
+.pytest_cache/
+
+# Migrations cache
+alembic.ini
+migrations/versions/*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
