@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Room, RoomEvent, RemoteTrack, Track } from 'livekit-client'
 import './App.css'
 
 function App() {
@@ -8,12 +9,13 @@ function App() {
   const [callDuration, setCallDuration] = useState(0)
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
   const [isSpeaking, setIsSpeaking] = useState(false)
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+
   const streamRef = useRef<MediaStream | null>(null)
   const animationRef = useRef<number>(0)
   const callTimerRef = useRef<number | null>(null)
   const speakingTimeoutRef = useRef<number | null>(null)
+  const roomRef = useRef<Room | null>(null)
 
   const formatCallDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -53,17 +55,17 @@ function App() {
       const analyser = audioContext.createAnalyser()
       const microphone = audioContext.createMediaStreamSource(stream)
       microphone.connect(analyser)
-      
+
       analyser.fftSize = 256
       const dataArray = new Uint8Array(analyser.frequencyBinCount)
 
       const updateAudioLevel = () => {
         if (!streamRef.current) return
-        
+
         analyser.getByteFrequencyData(dataArray)
         const average = dataArray.reduce((a, b) => a + b) / dataArray.length
         setAudioLevel(average)
-        
+
         // Detect speaking
         if (average > 20) {
           setIsSpeaking(true)
@@ -74,15 +76,13 @@ function App() {
             setIsSpeaking(false)
           }, 500)
         }
-        
+
         animationRef.current = requestAnimationFrame(updateAudioLevel)
       }
       updateAudioLevel()
 
-      // Create MediaRecorder for actual recording (optional)
-      mediaRecorderRef.current = new MediaRecorder(stream)
       return true
-      
+
     } catch (error) {
       console.error('Error accessing microphone:', error)
       alert('Unable to access microphone. Please check your permissions.')
@@ -93,24 +93,92 @@ function App() {
   const connectToSupport = async () => {
     if (!isConnected) {
       setConnectionStatus('connecting')
-      
-      // Request microphone access first
-      const micAccess = await requestMicrophoneAccess()
-      if (!micAccess) {
+
+      try {
+        // Get room token from your backend API
+        const response = await fetch('http://localhost:8000/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const { token, url, session_id } = await response.json()
+        console.log(`Starting support session: ${session_id}`)
+        setSessionId(session_id)
+       
+        // Request microphone access first
+        const micAccess = await requestMicrophoneAccess()
+        if (!micAccess) {
+          setConnectionStatus('disconnected')
+          return
+        }
+       
+        // Connect to LiveKit room
+        const newRoom = new Room({
+          // Configure room options
+          adaptiveStream: true,
+          dynacast: true,
+        })
+       
+        // Set up event listeners
+        newRoom.on(RoomEvent.Connected, () => {
+          console.log('Connected to LiveKit room')
+          setIsConnected(true)
+          setConnectionStatus('connected')
+          startCallTimer()
+        })
+       
+        newRoom.on(RoomEvent.Disconnected, () => {
+          console.log('Disconnected from LiveKit room')
+          setIsConnected(false)
+          setConnectionStatus('disconnected')
+          setSessionId(null)
+          stopCallTimer()
+        })
+       
+        // Listen for remote audio (AI agent speaking)
+        newRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+          if (track.kind === Track.Kind.Audio) {
+            console.log('AI agent audio track received')
+            const audioElement = track.attach()
+            audioElement.volume = 1.0
+            document.body.appendChild(audioElement)
+          }
+        })
+       
+        // Handle track unsubscribed
+        newRoom.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+          if (track.kind === Track.Kind.Audio) {
+            track.detach()
+          }
+        })
+       
+        // Connect to room
+        await newRoom.connect(url, token)
+       
+        // Enable microphone (no camera)
+        await newRoom.localParticipant.setMicrophoneEnabled(true)
+       
+        roomRef.current = newRoom
+       
+      } catch (error) {
+        console.error('Connection failed:', error)
         setConnectionStatus('disconnected')
-        return
+        alert(`Failed to connect to support: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
-      
-      // Simulate connection delay
-      setTimeout(() => {
-        setIsConnected(true)
-        setConnectionStatus('connected')
-        startCallTimer()
-        console.log('Connected to support team...')
-      }, 2000)
     } else {
+      // Disconnect
+      if (roomRef.current) {
+        await roomRef.current.disconnect()
+        roomRef.current = null
+      }
+     
       setIsConnected(false)
       setConnectionStatus('disconnected')
+      setSessionId(null)
       stopCallTimer()
       await stopMicrophone()
       console.log('Call ended')
@@ -147,6 +215,9 @@ function App() {
       if (speakingTimeoutRef.current) {
         clearTimeout(speakingTimeoutRef.current)
       }
+      if (roomRef.current) {
+        roomRef.current.disconnect()
+      }
     }
   }, [])
 
@@ -172,11 +243,11 @@ function App() {
               <h2 className="contact-name">DeskHelp Support</h2>
               <p className="contact-status">
                 {connectionStatus === 'connecting' && 'Connecting...'}
-                {connectionStatus === 'connected' && `Connected • ${formatCallDuration(callDuration)}`}
+                {connectionStatus === 'connected' && `Connected • ${formatCallDuration(callDuration)} ${sessionId ? `• Session: ${sessionId}` : ''}`}
                 {connectionStatus === 'disconnected' && 'Available 24/7'}
               </p>
             </div>
-            
+
             {connectionStatus === 'connecting' && (
               <div className="connecting-animation">
                 <div className="connecting-dots">
@@ -201,6 +272,7 @@ function App() {
               <div className="call-text">
                 <h3>Professional Support</h3>
                 <p>Connect with our expert support team for immediate assistance</p>
+                <p className="api-status">Backend API: Ready • LiveKit: Ready</p>
               </div>
             </div>
           ) : (
@@ -225,11 +297,12 @@ function App() {
                   </p>
                 </div>
               )}
-              
+             
               <div className="call-status">
                 <div className="status-indicator">
                   <div className="status-dot connected"></div>
-                  <span>Connected to Support Agent</span>
+                  <span>Connected to AI Support Agent</span>
+                  {sessionId && <span className="session-info"> • Session: {sessionId}</span>}
                 </div>
               </div>
             </div>
@@ -269,8 +342,8 @@ function App() {
         <div className="phone-footer">
           <p className="footer-text">
             {isConnected 
-              ? 'Microphone is active and ready for conversation' 
-              : 'Click to connect and start speaking with our support team'
+              ? 'Microphone is active and ready for conversation with AI agent' 
+              : 'Click to connect and start speaking with our AI support agent'
             }
           </p>
         </div>

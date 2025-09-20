@@ -544,3 +544,18 @@
     animation: none;
   }
 }
+
+/* API Status Styling */
+.api-status {
+  color: #10b981;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* Session Info Styling */
+.session-info {
+  color: #8b5cf6;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
