@@ -3,8 +3,10 @@ from sqlalchemy.orm import sessionmaker
 from models import Base
 import os
 
-# Use SQLite for simplicity in terminal mode
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tickets.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required!")
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

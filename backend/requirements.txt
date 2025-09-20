@@ -1,6 +1,0 @@
-openai
-livekit
-python-dotenv
-sqlalchemy
-fastapi
-uvicorn
