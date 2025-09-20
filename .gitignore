@@ -15,7 +15,7 @@ venv/
 .idea/
 
 # Environment files
-.env
+.env.local
 *.env
 
 # Logs
@@ -35,3 +35,7 @@ migrations/versions/*.pyc
 # OS files
 .DS_Store
 Thumbs.db
+
+*.db
+
+uv.lock
