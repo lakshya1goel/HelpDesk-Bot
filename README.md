@@ -37,7 +37,7 @@ Click here to access Demo Video: https://www.loom.com/share/e094cbfaafb443908583
 
 1. **Clone and navigate to the project**:
 ```bash
-git clone <repository-url>
+git clone https://github.com/lakshya1goel/HelpDesk-Bot
 cd deskHelp-bot/backend
 ```
 
