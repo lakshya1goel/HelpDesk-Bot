@@ -24,6 +24,9 @@ Click here to access Demo Video: https://www.loom.com/share/e094cbfaafb443908583
 - **Audio Processing**: Web Audio API for microphone input and visualization
 - **Build Tool**: Vite for fast development and building
 
+<img width="1215" height="848" alt="Pasted image (8)" src="https://github.com/user-attachments/assets/1118b7c2-ed3b-44c0-9777-9c8396747735" />
+
+
 ## 🚀 Setup Instructions
 
 ### Prerequisites
