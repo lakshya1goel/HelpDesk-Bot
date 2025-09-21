@@ -34,7 +34,7 @@
   padding: 2rem;
   max-width: 800px;
   width: 100%;
-  height: 400px;
+  min-height: 400px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6),
               0 0 0 1px rgba(255, 255, 255, 0.05);
   position: relative;
@@ -42,6 +42,14 @@
   animation: phoneSlideIn 0.8s ease-out;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+.phone-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 @keyframes phoneSlideIn {
@@ -419,6 +427,8 @@
   text-align: center;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .footer-text {

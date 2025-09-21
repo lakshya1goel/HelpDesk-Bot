@@ -1,12 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from livekit import api
-import os
 import uuid
 from datetime import timedelta
-from dotenv import load_dotenv
-
-load_dotenv(".env.local")
+from config import config
 
 app = FastAPI(title="DeskHelp Support API")
 
@@ -18,22 +15,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# LiveKit configuration
-LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
-LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")  
-LIVEKIT_URL = os.getenv("LIVEKIT_URL")
-
 @app.post("/api/token")
 async def create_room_token():
     """Generate a LiveKit room token for anonymous users"""
-    if not all([LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL]):
-        raise HTTPException(status_code=500, detail="LiveKit configuration missing")
+    if not config.validate_livekit_config():
+        missing_vars = config.get_missing_livekit_vars()
+        raise HTTPException(
+            status_code=500, 
+            detail=f"LiveKit configuration missing: {', '.join(missing_vars)}"
+        )
     
     session_id = str(uuid.uuid4())[:8]
     room_name = f"support-{session_id}"
     identity = f"customer-{session_id}"
     
-    token = api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET) \
+    token = api.AccessToken(config.LIVEKIT_API_KEY, config.LIVEKIT_API_SECRET) \
         .with_identity(identity) \
         .with_name(f"Customer {session_id}") \
         .with_grants(api.VideoGrants(
@@ -44,7 +40,7 @@ async def create_room_token():
     
     return {
         "token": token.to_jwt(),
-        "url": LIVEKIT_URL,
+        "url": config.LIVEKIT_URL,
         "room": room_name,
         "session_id": session_id
     }

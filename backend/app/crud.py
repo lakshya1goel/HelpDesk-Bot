@@ -10,14 +10,6 @@ ISSUE_TYPES = {
     "printer_problems": {"description": "Printer problems - power plug change", "price": 10.0}
 }
 
-def get_issue_price(issue_type: str) -> float:
-    """Get price for a specific issue type"""
-    return ISSUE_TYPES.get(issue_type, {}).get("price", 0.0)
-
-def get_issue_description(issue_type: str) -> str:
-    """Get description for a specific issue type"""
-    return ISSUE_TYPES.get(issue_type, {}).get("description", "Unknown issue")
-
 def create_ticket(
     db: Session,
     name: str,

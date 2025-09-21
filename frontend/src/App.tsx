@@ -224,8 +224,9 @@ function App() {
   return (
     <div className="phone-container">
       <div className="phone-interface">
-        {/* Header */}
-        <div className="phone-header">
+        <div className="phone-content">
+          {/* Header */}
+          <div className="phone-header">
           <div className="call-info">
             <div className={`contact-avatar ${isSpeaking ? 'speaking' : ''}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -336,6 +337,7 @@ function App() {
               )}
             </button>
           </div>
+        </div>
         </div>
 
         {/* Footer */}
