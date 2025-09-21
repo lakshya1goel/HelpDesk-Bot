@@ -45,17 +45,21 @@ class Assistant(Agent):
         price: float
     ):
         """Use this tool to create a support ticket.
+        
+        IMPORTANT: ALL TEXT DATA MUST BE IN ENGLISH BEFORE CALLING THIS FUNCTION.
+        Translate any non-English names, addresses, or issue descriptions to English.
 
         Args:
-            name: Customer's full name
+            name: Customer's full name (MUST BE IN ENGLISH)
             email: Customer's email address
             phone: Customer's phone number
-            address: Customer's address
-            issue: Description of the technical issue
+            address: Customer's address (MUST BE IN ENGLISH)
+            issue: Description of the technical issue (MUST BE IN ENGLISH)
             price: Service fee for the issue
         """
 
         logger.info(f"Creating ticket for {name} with issue: {issue}")
+        logger.info(f"Ticket details - Name: {name}, Address: {address}, Issue: {issue}")
 
         db = SessionLocal()
         try:
@@ -68,7 +72,11 @@ class Assistant(Agent):
                 issue=issue,
                 price=price
             )
+            logger.info(f"Ticket {ticket.id} created successfully")
             return f"Ticket created successfully with ID: {ticket.id}"
+        except Exception as e:
+            logger.error(f"Error creating ticket: {e}")
+            return f"Error creating ticket: {str(e)}"
         finally:
             db.close()
     
@@ -85,18 +93,27 @@ class Assistant(Agent):
         price: Optional[float] = NOT_GIVEN,
     ):
         """Use this tool to edit an existing support ticket.
+        
+        IMPORTANT: ALL TEXT DATA MUST BE IN ENGLISH BEFORE CALLING THIS FUNCTION.
+        Translate any non-English names, addresses, or issue descriptions to English.
 
         Args:
             ticket_id: The ID of the ticket to edit
-            name: Customer's full name (optional)
+            name: Customer's full name (MUST BE IN ENGLISH, optional)
             email: Customer's email address (optional)
             phone: Customer's phone number (optional)
-            address: Customer's address (optional)
-            issue: Description of the technical issue (optional)
+            address: Customer's address (MUST BE IN ENGLISH, optional)
+            issue: Description of the technical issue (MUST BE IN ENGLISH, optional)
             price: Service fee for the issue (optional)
         """
 
         logger.info(f"Editing ticket {ticket_id}")
+        if name != NOT_GIVEN:
+            logger.info(f"Updating name to: {name}")
+        if address != NOT_GIVEN:
+            logger.info(f"Updating address to: {address}")
+        if issue != NOT_GIVEN:
+            logger.info(f"Updating issue to: {issue}")
 
         db = SessionLocal()
         try:
@@ -112,9 +129,14 @@ class Assistant(Agent):
             )
 
             if ticket:
+                logger.info(f"Ticket {ticket_id} updated successfully")
                 return f"Ticket {ticket_id} updated successfully"
             else:
+                logger.warning(f"Ticket {ticket_id} not found")
                 return f"Ticket {ticket_id} not found"
+        except Exception as e:
+            logger.error(f"Error editing ticket {ticket_id}: {e}")
+            return f"Error editing ticket: {str(e)}"
         finally:
             db.close()
 
@@ -137,7 +159,7 @@ async def entrypoint(ctx: JobContext):
         llm=openai.LLM(model="gpt-4o-mini"),
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
         # See all providers at https://docs.livekit.io/agents/integrations/stt/
-        stt=deepgram.STT(model="nova-3", language="multi"),
+        stt=deepgram.STT(model="nova-3", language="en-US"),
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all providers at https://docs.livekit.io/agents/integrations/tts/
         tts=cartesia.TTS(voice="6f84f4b8-58a2-430c-8c79-688dad597532"),

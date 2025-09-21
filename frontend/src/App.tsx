@@ -108,21 +108,21 @@ function App() {
         const { token, url, session_id } = await response.json()
         console.log(`Starting support session: ${session_id}`)
         setSessionId(session_id)
-       
+
         // Request microphone access first
         const micAccess = await requestMicrophoneAccess()
         if (!micAccess) {
           setConnectionStatus('disconnected')
           return
         }
-       
+
         // Connect to LiveKit room
         const newRoom = new Room({
           // Configure room options
           adaptiveStream: true,
           dynacast: true,
         })
-       
+
         // Set up event listeners
         newRoom.on(RoomEvent.Connected, () => {
           console.log('Connected to LiveKit room')
@@ -130,7 +130,7 @@ function App() {
           setConnectionStatus('connected')
           startCallTimer()
         })
-       
+
         newRoom.on(RoomEvent.Disconnected, () => {
           console.log('Disconnected from LiveKit room')
           setIsConnected(false)
@@ -138,7 +138,7 @@ function App() {
           setSessionId(null)
           stopCallTimer()
         })
-       
+
         // Listen for remote audio (AI agent speaking)
         newRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
           if (track.kind === Track.Kind.Audio) {
@@ -148,22 +148,22 @@ function App() {
             document.body.appendChild(audioElement)
           }
         })
-       
+
         // Handle track unsubscribed
         newRoom.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
           if (track.kind === Track.Kind.Audio) {
             track.detach()
           }
         })
-       
+
         // Connect to room
         await newRoom.connect(url, token)
-       
+
         // Enable microphone (no camera)
         await newRoom.localParticipant.setMicrophoneEnabled(true)
-       
+
         roomRef.current = newRoom
-       
+
       } catch (error) {
         console.error('Connection failed:', error)
         setConnectionStatus('disconnected')
@@ -175,7 +175,7 @@ function App() {
         await roomRef.current.disconnect()
         roomRef.current = null
       }
-     
+
       setIsConnected(false)
       setConnectionStatus('disconnected')
       setSessionId(null)
@@ -297,7 +297,7 @@ function App() {
                   </p>
                 </div>
               )}
-             
+
               <div className="call-status">
                 <div className="status-indicator">
                   <div className="status-dot connected"></div>
