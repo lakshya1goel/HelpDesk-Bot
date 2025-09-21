@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Room, RoomEvent, RemoteTrack, Track } from 'livekit-client'
+import { BASE_URL } from './config'
 import './App.css'
 
 function App() {
@@ -50,7 +51,6 @@ function App() {
       streamRef.current = stream
       setIsMicOn(true)
 
-      // Create audio context for visual feedback
       const audioContext = new AudioContext()
       const analyser = audioContext.createAnalyser()
       const microphone = audioContext.createMediaStreamSource(stream)
@@ -66,7 +66,6 @@ function App() {
         const average = dataArray.reduce((a, b) => a + b) / dataArray.length
         setAudioLevel(average)
 
-        // Detect speaking
         if (average > 20) {
           setIsSpeaking(true)
           if (speakingTimeoutRef.current) {
@@ -95,8 +94,7 @@ function App() {
       setConnectionStatus('connecting')
 
       try {
-        // Get room token from your backend API
-        const response = await fetch('http://localhost:8000/api/token', {
+        const response = await fetch(`${BASE_URL}token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         })
@@ -109,21 +107,17 @@ function App() {
         console.log(`Starting support session: ${session_id}`)
         setSessionId(session_id)
 
-        // Request microphone access first
         const micAccess = await requestMicrophoneAccess()
         if (!micAccess) {
           setConnectionStatus('disconnected')
           return
         }
 
-        // Connect to LiveKit room
         const newRoom = new Room({
-          // Configure room options
           adaptiveStream: true,
           dynacast: true,
         })
 
-        // Set up event listeners
         newRoom.on(RoomEvent.Connected, () => {
           console.log('Connected to LiveKit room')
           setIsConnected(true)
@@ -139,7 +133,6 @@ function App() {
           stopCallTimer()
         })
 
-        // Listen for remote audio (AI agent speaking)
         newRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
           if (track.kind === Track.Kind.Audio) {
             console.log('AI agent audio track received')
@@ -149,17 +142,14 @@ function App() {
           }
         })
 
-        // Handle track unsubscribed
         newRoom.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
           if (track.kind === Track.Kind.Audio) {
             track.detach()
           }
         })
 
-        // Connect to room
         await newRoom.connect(url, token)
 
-        // Enable microphone (no camera)
         await newRoom.localParticipant.setMicrophoneEnabled(true)
 
         roomRef.current = newRoom
@@ -170,7 +160,7 @@ function App() {
         alert(`Failed to connect to support: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     } else {
-      // Disconnect
+
       if (roomRef.current) {
         await roomRef.current.disconnect()
         roomRef.current = null
