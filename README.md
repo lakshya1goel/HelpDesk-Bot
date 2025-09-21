@@ -67,9 +67,6 @@ DATABASE_URL=sqlite:///./support_tickets.db
 OPENAI_API_KEY=your_openai_api_key
 DEEPGRAM_API_KEY=your_deepgram_api_key
 CARTESIA_API_KEY=your_cartesia_api_key
-
-# Optional: Disable CUDA if no GPU
-CUDA_VISIBLE_DEVICES=""
 ```
 
 5. **Start the backend services**:
@@ -94,7 +91,7 @@ npm install
 3. **Configure environment** (optional):
 Create `.env` file in frontend directory:
 ```env
-VITE_BASE_URL=http://localhost:8000/
+VITE_BASE_URL=backend_base_url
 ```
 
 4. **Start development server**:
@@ -108,11 +105,9 @@ Frontend will be available at `http://localhost:5173`
 
 ### Planned Features
 1. **Location Validation** - Implement address validation and geocoding for accurate customer location data
-2. **Initial Time Optimization** - Reduce cold start delays through advanced model caching and pre-loading strategies
-3. **Rate Limits Handling** - Implement intelligent rate limiting and fallback mechanisms for LLM providers
+2. **Initial Time Optimization** - Reduce start delays through model caching and pre-loading strategies
+3. **Rate Limits Handling** - Implement a queue mechanism with priority-based request handling for managing rate limits of OpenAI, Cartesia, and Deepgram providers.
 4. **Duplicate Issue Prevention** - Check for existing tickets by email to prevent duplicate issue creation
 5. **Ticket Resolution Workflow** - Add functionality to mark tickets as resolved with customer confirmation
 
 ---
-
-**Built with ❤️ using LiveKit, OpenAI, and modern web technologies** 
