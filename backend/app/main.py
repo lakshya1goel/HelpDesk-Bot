@@ -6,6 +6,7 @@ from multiprocessing import Process
 from livekit.agents import WorkerOptions, cli
 from livekit_agent import entrypoint, prewarm
 from api_server import app
+from config import config
 
 def run_api_server():
     """Run the FastAPI server"""
@@ -27,8 +28,6 @@ def run_livekit_agent():
         sys.argv = original_argv
 
 if __name__ == "__main__":
-    from config import config
-    
     missing_vars = config.get_all_missing_vars()
     
     if missing_vars:

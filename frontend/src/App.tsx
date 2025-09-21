@@ -118,8 +118,9 @@ function App() {
           dynacast: true,
         })
 
-        newRoom.on(RoomEvent.Connected, () => {
+        newRoom.on(RoomEvent.Connected, async () => {
           console.log('Connected to LiveKit room')
+          await new Promise(resolve => setTimeout(resolve, 7000))
           setIsConnected(true)
           setConnectionStatus('connected')
           startCallTimer()
